@@ -69,6 +69,7 @@ static t_opt opt[] = {
     {"reuseaddr",   opt_reuseaddr},
     {"tcp-nodelay", opt_tcp_nodelay},
     {"linger",      opt_linger},
+    {"ip-tos",      opt_ip_tos},
     {NULL,          NULL}
 };
 

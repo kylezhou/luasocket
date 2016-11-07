@@ -18,6 +18,7 @@
 \*=========================================================================*/
 static int opt_setmembership(lua_State *L, p_socket ps, int level, int name);
 static int opt_setboolean(lua_State *L, p_socket ps, int level, int name);
+static int opt_setint(lua_State *L, p_socket ps, int level, int name);
 static int opt_set(lua_State *L, p_socket ps, int level, int name, 
         void *val, int len);
 
@@ -105,6 +106,11 @@ int opt_ip_drop_membersip(lua_State *L, p_socket ps)
     return opt_setmembership(L, ps, IPPROTO_IP, IP_DROP_MEMBERSHIP);
 }
 
+int opt_ip_tos(lua_State *L, p_socket ps)
+{
+    return opt_setint(L, ps, IPPROTO_IP, IP_TOS);
+}
+
 /*=========================================================================*\
 * Auxiliar functions
 \*=========================================================================*/
@@ -147,3 +153,8 @@ static int opt_setboolean(lua_State *L, p_socket ps, int level, int name)
     return opt_set(L, ps, level, name, (char *) &val, sizeof(val));
 }
 
+static int opt_setint(lua_State *L, p_socket ps, int level, int name)
+{
+    int val = (int) lua_tonumber(L, 3);             /* obj, name, int */
+    return opt_set(L, ps, level, name, (char *) &val, sizeof(val));
+}

@@ -118,6 +118,14 @@ function open(host, port, create)
     return h
 end
 
+function metat.__index:settos(tos)
+    tos = base.tonumber(tos)
+    if tos then
+        return self.try(self.c:setoption('ip-tos', tos))
+    end
+    return 1
+end
+
 function metat.__index:sendrequestline(method, uri)
     local reqline = string.format("%s %s HTTP/1.1\r\n", method or "GET", uri)
     return self.try(self.c:send(reqline))
@@ -279,7 +287,8 @@ function tredirect(reqt, location)
         headers = reqt.headers,
         proxy = reqt.proxy, 
         nredirects = (reqt.nredirects or 0) + 1,
-        create = reqt.create
+        create = reqt.create,
+        tos = reqt.tos
     }   
     -- pass location header back as a hint we redirected
     headers = headers or {}
@@ -292,6 +301,7 @@ function trequest(reqt)
     -- until we are sure there is no way to get it
     local nreqt = adjustrequest(reqt)
     local h = open(nreqt.host, nreqt.port, nreqt.create)
+    h:settos(nreqt.tos)
     -- send request line and headers
     h:sendrequestline(nreqt.method, nreqt.uri)
     h:sendheaders(nreqt.headers)
@@ -326,11 +336,12 @@ function trequest(reqt)
     return 1, code, headers, status
 end
 
-local function srequest(u, b)
+local function srequest(u, b, tos)
     local t = {}
     local reqt = {
         url = u,
-        sink = ltn12.sink.table(t)
+        sink = ltn12.sink.table(t),
+        tos = tos
     }
     if b then
         reqt.source = ltn12.source.string(b)
@@ -344,7 +355,7 @@ local function srequest(u, b)
     return table.concat(t), code, headers, status
 end
 
-request = socket.protect(function(reqt, body)
-    if base.type(reqt) == "string" then return srequest(reqt, body)
+request = socket.protect(function(reqt, body, tos)
+    if base.type(reqt) == "string" then return srequest(reqt, body, tos)
     else return trequest(reqt) end
 end)
